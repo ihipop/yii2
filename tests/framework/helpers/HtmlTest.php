@@ -1,4 +1,9 @@
 <?php
+/**
+ * @link http://www.yiiframework.com/
+ * @copyright Copyright (c) 2008 Yii Software LLC
+ * @license http://www.yiiframework.com/license/
+ */
 
 namespace yiiunit\framework\helpers;
 
@@ -34,13 +39,13 @@ class HtmlTest extends TestCase
 
     public function testEncode()
     {
-        $this->assertEquals("a&lt;&gt;&amp;&quot;&#039;�", Html::encode("a<>&\"'\x80"));
+        $this->assertEquals('a&lt;&gt;&amp;&quot;&#039;�', Html::encode("a<>&\"'\x80"));
         $this->assertEquals('Sam &amp; Dark', Html::encode('Sam & Dark'));
     }
 
     public function testDecode()
     {
-        $this->assertEquals("a<>&\"'", Html::decode("a&lt;&gt;&amp;&quot;&#039;"));
+        $this->assertEquals("a<>&\"'", Html::decode('a&lt;&gt;&amp;&quot;&#039;'));
     }
 
     public function testTag()
@@ -113,7 +118,7 @@ class HtmlTest extends TestCase
         ]);
         $this->assertEquals('', Html::csrfMetaTags());
     }
-    
+
     public function testCsrfMetaTagsEnableCsrfValidation()
     {
         $this->mockApplication([
@@ -132,20 +137,25 @@ class HtmlTest extends TestCase
         $actual = Html::csrfMetaTags();
         $this->assertStringMatchesFormat($pattern, $actual);
     }
-    
+
     public function testCsrfMetaTagsEnableCsrfValidationWithoutCookieValidationKey()
     {
-        $request = $this->getMock('yii\\web\\Request');
-        $request->method('enableCsrfValidation')->willReturn(true);
-        Yii::$app->set('request', $request);
-        $pattern = '<meta name="csrf-param" content="_csrf">%A<meta name="csrf-token">';
-        $actual = Html::csrfMetaTags();
-        $this->assertStringMatchesFormat($pattern, $actual);
+        $this->mockApplication([
+            'components' => [
+                'request' => [
+                    'class' => 'yii\web\Request',
+                    'enableCsrfValidation' => true,
+                ],
+            ],
+        ]);
+        $this->expectException('yii\base\InvalidConfigException');
+        $this->expectExceptionMessage('yii\web\Request::cookieValidationKey must be configured with a secret key.');
+        Html::csrfMetaTags();
     }
 
     /**
      * @dataProvider dataProviderBeginFormSimulateViaPost
-     * 
+     *
      * @param string $expected
      * @param string $method
      */
@@ -156,18 +166,18 @@ class HtmlTest extends TestCase
     }
 
     /**
-     * Data provider for [[testBeginFormSimulateViaPost()]]
+     * Data provider for [[testBeginFormSimulateViaPost()]].
      * @return array test data
      */
     public function dataProviderBeginFormSimulateViaPost()
     {
         return [
-          ['<form action="/foo" method="GET">', 'GET'],  
-          ['<form action="/foo" method="POST">', 'POST'],  
-          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="DELETE">', 'DELETE'],  
-          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="GETFOO">', 'GETFOO'],  
-          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="POSTFOO">', 'POSTFOO'],  
-          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="POSTFOOPOST">', 'POSTFOOPOST'],  
+          ['<form action="/foo" method="GET">', 'GET'],
+          ['<form action="/foo" method="POST">', 'POST'],
+          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="DELETE">', 'DELETE'],
+          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="GETFOO">', 'GETFOO'],
+          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="POSTFOO">', 'POSTFOO'],
+          ['<form action="/foo" method="post">%A<input type="hidden" name="_method" value="POSTFOOPOST">', 'POSTFOOPOST'],
         ];
     }
 
@@ -197,7 +207,7 @@ class HtmlTest extends TestCase
         $this->assertEquals('<a href="/example">something</a>', Html::a('something', '/example'));
         $this->assertEquals('<a href="/test">something</a>', Html::a('something', ''));
         $this->assertEquals('<a href="http://www.быстроном.рф">http://www.быстроном.рф</a>', Html::a('http://www.быстроном.рф', 'http://www.быстроном.рф'));
-        $this->assertEquals('<a href="https://www.example.com/index.php?r=site%2Ftest">Test page</a>', Html::a('Test page',  Url::to(['/site/test'], 'https')));
+        $this->assertEquals('<a href="https://www.example.com/index.php?r=site%2Ftest">Test page</a>', Html::a('Test page', Url::to(['/site/test'], 'https')));
     }
 
     public function testMailto()
@@ -294,6 +304,9 @@ class HtmlTest extends TestCase
 
     /**
      * @dataProvider imgDataProvider
+     * @param string $expected
+     * @param string $src
+     * @param array $options
      */
     public function testImg($expected, $src, $options)
     {
@@ -311,7 +324,7 @@ class HtmlTest extends TestCase
     {
         $this->assertEquals('<button type="button">Button</button>', Html::button());
         $this->assertEquals('<button type="button" name="test" value="value">content<></button>', Html::button('content<>', ['name' => 'test', 'value' => 'value']));
-        $this->assertEquals('<button type="submit" class="t" name="test" value="value">content<></button>', Html::button('content<>', ['type' => 'submit', 'name' => 'test', 'value' => 'value', 'class' => "t"]));
+        $this->assertEquals('<button type="submit" class="t" name="test" value="value">content<></button>', Html::button('content<>', ['type' => 'submit', 'name' => 'test', 'value' => 'value', 'class' => 't']));
     }
 
     public function testSubmitButton()
@@ -384,31 +397,35 @@ class HtmlTest extends TestCase
                 '<textarea name="test"></textarea>',
                 'test',
                 null,
-                []
+                [],
             ],
             [
                 '<textarea class="t" name="test">value&lt;&gt;</textarea>',
                 'test',
                 'value<>',
-                ['class' => 't']
+                ['class' => 't'],
             ],
             [
                 '<textarea name="test">value&amp;lt;&amp;gt;</textarea>',
                 'test',
                 'value&lt;&gt;',
-                []
+                [],
             ],
             [
                 '<textarea name="test">value&lt;&gt;</textarea>',
                 'test',
                 'value&lt;&gt;',
-                ['doubleEncode' => false]
+                ['doubleEncode' => false],
             ],
         ];
     }
 
     /**
      * @dataProvider textareaDataProvider
+     * @param string $expected
+     * @param string $name
+     * @param string $value
+     * @param array $options
      */
     public function testTextarea($expected, $name, $value, $options)
     {
@@ -425,7 +442,7 @@ class HtmlTest extends TestCase
             'class' => 'a',
             'value' => null,
             'label' => 'ccc',
-            'labelOptions' => ['class' =>'bbb'],
+            'labelOptions' => ['class' => 'bbb'],
         ]));
         $this->assertEquals('<input type="hidden" name="test" value="0"><label><input type="radio" class="a" name="test" value="2" checked> ccc</label>', Html::radio('test', true, [
             'class' => 'a',
@@ -445,7 +462,7 @@ class HtmlTest extends TestCase
             'class' => 'a',
             'value' => null,
             'label' => 'ccc',
-            'labelOptions' => ['class' =>'bbb'],
+            'labelOptions' => ['class' => 'bbb'],
         ]));
         $this->assertEquals('<input type="hidden" name="test" value="0"><label><input type="checkbox" class="a" name="test" value="2" checked> ccc</label>', Html::checkbox('test', true, [
             'class' => 'a',
@@ -464,20 +481,20 @@ class HtmlTest extends TestCase
 
     public function testDropDownList()
     {
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test">
 
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::dropDownList('test'));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test">
 <option value="value1">text1</option>
 <option value="value2">text2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::dropDownList('test', null, $this->getDataItems()));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test">
 <option value="value1">text1</option>
 <option value="value2" selected>text2</option>
@@ -485,7 +502,7 @@ EOD;
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::dropDownList('test', 'value2', $this->getDataItems()));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test">
 <option value="value1">text1</option>
 <option value="value2" selected>text2</option>
@@ -493,11 +510,11 @@ EOD;
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::dropDownList('test', null, $this->getDataItems(), [
             'options' => [
-                'value2' => ['selected' => true]
+                'value2' => ['selected' => true],
             ],
         ]));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test[]" multiple="true" size="4">
 
 </select>
@@ -507,55 +524,55 @@ EOD;
 
     public function testListBox()
     {
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test'));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="5">
 <option value="value1">text1</option>
 <option value="value2">text2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', null, $this->getDataItems(), ['size' => 5]));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1&lt;&gt;">text1&lt;&gt;</option>
 <option value="value  2">text  2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', null, $this->getDataItems2()));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1&lt;&gt;">text1&lt;&gt;</option>
 <option value="value  2">text&nbsp;&nbsp;2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', null, $this->getDataItems2(), ['encodeSpaces' => true]));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1&lt;&gt;">text1<></option>
 <option value="value  2">text  2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', null, $this->getDataItems2(), ['encode' => false]));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1&lt;&gt;">text1<></option>
 <option value="value  2">text&nbsp;&nbsp;2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', null, $this->getDataItems2(), ['encodeSpaces' => true, 'encode' => false]));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1">text1</option>
 <option value="value2" selected>text2</option>
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', 'value2', $this->getDataItems()));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1" selected>text1</option>
 <option value="value2" selected>text2</option>
@@ -563,7 +580,7 @@ EOD;
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', ['value1', 'value2'], $this->getDataItems()));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test[]" multiple size="4">
 
 </select>
@@ -571,14 +588,14 @@ EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', null, [], ['multiple' => true]));
         $this->assertEqualsWithoutLE($expected, Html::listBox('test[]', null, [], ['multiple' => true]));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <input type="hidden" name="test" value="0"><select name="test" size="4">
 
 </select>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::listBox('test', '', [], ['unselect' => '0']));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <select name="test" size="4">
 <option value="value1" selected>text1</option>
 <option value="value2" selected>text2</option>
@@ -591,20 +608,20 @@ EOD;
     {
         $this->assertEquals('<div></div>', Html::checkboxList('test'));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <div><label><input type="checkbox" name="test[]" value="value1"> text1</label>
 <label><input type="checkbox" name="test[]" value="value2" checked> text2</label></div>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::checkboxList('test', ['value2'], $this->getDataItems()));
         $this->assertEqualsWithoutLE($expected, Html::checkboxList('test[]', ['value2'], $this->getDataItems()));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <div><label><input type="checkbox" name="test[]" value="value1&lt;&gt;"> text1&lt;&gt;</label>
 <label><input type="checkbox" name="test[]" value="value  2"> text  2</label></div>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::checkboxList('test', ['value2'], $this->getDataItems2()));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <input type="hidden" name="test" value="0"><div><label><input type="checkbox" name="test[]" value="value1"> text1</label><br>
 <label><input type="checkbox" name="test[]" value="value2" checked> text2</label></div>
 EOD;
@@ -613,17 +630,17 @@ EOD;
             'unselect' => '0',
         ]));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <div>0<label>text1 <input type="checkbox" name="test[]" value="value1"></label>
 1<label>text2 <input type="checkbox" name="test[]" value="value2" checked></label></div>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::checkboxList('test', ['value2'], $this->getDataItems(), [
             'item' => function ($index, $label, $name, $checked, $value) {
                 return $index . Html::label($label . ' ' . Html::checkbox($name, $checked, ['value' => $value]));
-            }
+            },
         ]));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 0<label>text1 <input type="checkbox" name="test[]" value="value1"></label>
 1<label>text2 <input type="checkbox" name="test[]" value="value2" checked></label>
 EOD;
@@ -631,7 +648,7 @@ EOD;
             'item' => function ($index, $label, $name, $checked, $value) {
                 return $index . Html::label($label . ' ' . Html::checkbox($name, $checked, ['value' => $value]));
             },
-            'tag' => false
+            'tag' => false,
         ]));
 
 
@@ -639,28 +656,27 @@ EOD;
             'item' => function ($index, $label, $name, $checked, $value) {
                 return $index . Html::label($label . ' ' . Html::checkbox($name, $checked, ['value' => $value]));
             },
-            'tag' => false
+            'tag' => false,
         ]));
-
     }
 
     public function testRadioList()
     {
         $this->assertEquals('<div></div>', Html::radioList('test'));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <div><label><input type="radio" name="test" value="value1"> text1</label>
 <label><input type="radio" name="test" value="value2" checked> text2</label></div>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::radioList('test', ['value2'], $this->getDataItems()));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <div><label><input type="radio" name="test" value="value1&lt;&gt;"> text1&lt;&gt;</label>
 <label><input type="radio" name="test" value="value  2"> text  2</label></div>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::radioList('test', ['value2'], $this->getDataItems2()));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <input type="hidden" name="test" value="0"><div><label><input type="radio" name="test" value="value1"> text1</label><br>
 <label><input type="radio" name="test" value="value2" checked> text2</label></div>
 EOD;
@@ -669,17 +685,17 @@ EOD;
             'unselect' => '0',
         ]));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <div>0<label>text1 <input type="radio" name="test" value="value1"></label>
 1<label>text2 <input type="radio" name="test" value="value2" checked></label></div>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::radioList('test', ['value2'], $this->getDataItems(), [
             'item' => function ($index, $label, $name, $checked, $value) {
                 return $index . Html::label($label . ' ' . Html::radio($name, $checked, ['value' => $value]));
-            }
+            },
         ]));
 
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 0<label>text1 <input type="radio" name="test" value="value1"></label>
 1<label>text2 <input type="radio" name="test" value="value2" checked></label>
 EOD;
@@ -687,14 +703,14 @@ EOD;
             'item' => function ($index, $label, $name, $checked, $value) {
                 return $index . Html::label($label . ' ' . Html::radio($name, $checked, ['value' => $value]));
             },
-            'tag' => false
+            'tag' => false,
         ]));
 
         $this->assertEqualsWithoutLE($expected, Html::radioList('test', new \ArrayObject(['value2']), $this->getDataItems(), [
             'item' => function ($index, $label, $name, $checked, $value) {
                 return $index . Html::label($label . ' ' . Html::radio($name, $checked, ['value' => $value]));
             },
-            'tag' => false
+            'tag' => false,
         ]));
     }
 
@@ -703,7 +719,7 @@ EOD;
         $data = [
             1, 'abc', '<>',
         ];
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <ul>
 <li>1</li>
 <li>abc</li>
@@ -711,7 +727,7 @@ EOD;
 </ul>
 EOD;
         $this->assertEqualsWithoutLE($expected, Html::ul($data));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <ul class="test">
 <li class="item-0">1</li>
 <li class="item-1">abc</li>
@@ -722,7 +738,7 @@ EOD;
             'class' => 'test',
             'item' => function ($item, $index) {
                 return "<li class=\"item-$index\">$item</li>";
-            }
+            },
         ]));
 
         $this->assertEquals('<ul class="test"></ul>', Html::ul([], ['class' => 'test']));
@@ -735,7 +751,7 @@ EOD;
         $data = [
             1, 'abc', '<>',
         ];
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <ol>
 <li class="ti">1</li>
 <li class="ti">abc</li>
@@ -745,7 +761,7 @@ EOD;
         $this->assertEqualsWithoutLE($expected, Html::ol($data, [
             'itemOptions' => ['class' => 'ti'],
         ]));
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <ol class="test">
 <li class="item-0">1</li>
 <li class="item-1">abc</li>
@@ -756,7 +772,7 @@ EOD;
             'class' => 'test',
             'item' => function ($item, $index) {
                 return "<li class=\"item-$index\">$item</li>";
-            }
+            },
         ]));
 
         $this->assertEquals('<ol class="test"></ol>', Html::ol([], ['class' => 'test']));
@@ -776,7 +792,7 @@ EOD;
             'value2' => 'label2',
             'group2' => [],
         ];
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <option value="">please&nbsp;select&lt;&gt;</option>
 <option value="value1" selected>label1</option>
 <optgroup label="group1">
@@ -822,7 +838,7 @@ EOD;
             'value1' => 'label1',
             'value2' => 'label2',
         ];
-        $expected = <<<EOD
+        $expected = <<<'EOD'
 <option class="prompt" value="-1" label="None">Please select</option>
 <option value="value1" selected>label1</option>
 <option value="value2">label2</option>
@@ -872,7 +888,7 @@ EOD;
         $this->assertEquals(['class' => 'test test2 test3'], $options);
 
         $options = [
-            'class' => ['test']
+            'class' => ['test'],
         ];
         Html::addCssClass($options, 'test2');
         $this->assertEquals(['class' => ['test', 'test2']], $options);
@@ -882,7 +898,7 @@ EOD;
         $this->assertEquals(['class' => ['test', 'test2', 'test3']], $options);
 
         $options = [
-            'class' => 'test'
+            'class' => 'test',
         ];
         Html::addCssClass($options, ['test1', 'test2']);
         $this->assertEquals(['class' => 'test test1 test2'], $options);
@@ -895,8 +911,8 @@ EOD;
     {
         $options = [
             'class' => [
-                'persistent' => 'test1'
-            ]
+                'persistent' => 'test1',
+            ],
         ];
         Html::addCssClass($options, ['persistent' => 'test2']);
         $this->assertEquals(['persistent' => 'test1'], $options['class']);
@@ -924,7 +940,7 @@ EOD;
         $this->assertEquals([], $options);
 
         $options = [
-            'class' => 'test test1 test2'
+            'class' => 'test test1 test2',
         ];
         Html::removeCssClass($options, ['test1', 'test2']);
         $this->assertEquals(['class' => 'test'], $options);
@@ -972,7 +988,7 @@ EOD;
 
         $options = [
             'style' => [
-                'width' => '100px'
+                'width' => '100px',
             ],
         ];
         Html::addCssStyle($options, ['color' => 'red'], false);
@@ -1034,7 +1050,7 @@ EOD;
     }
 
     /**
-     * Data provider for [[testActiveTextInput()]]
+     * Data provider for [[testActiveTextInput()]].
      * @return array test data
      */
     public function dataProviderActiveTextInput()
@@ -1048,14 +1064,14 @@ EOD;
             [
                 '',
                 [
-                    'maxlength' => true
+                    'maxlength' => true,
                 ],
                 '<input type="text" id="htmltestmodel-name" name="HtmlTestModel[name]" value="" maxlength="100">',
             ],
             [
                 '',
                 [
-                    'maxlength' => 99
+                    'maxlength' => 99,
                 ],
                 '<input type="text" id="htmltestmodel-name" name="HtmlTestModel[name]" value="" maxlength="99">',
             ],
@@ -1077,7 +1093,7 @@ EOD;
     }
 
     /**
-     * Data provider for [[testActivePasswordInput()]]
+     * Data provider for [[testActivePasswordInput()]].
      * @return array test data
      */
     public function dataProviderActivePasswordInput()
@@ -1091,14 +1107,14 @@ EOD;
             [
                 '',
                 [
-                    'maxlength' => true
+                    'maxlength' => true,
                 ],
                 '<input type="password" id="htmltestmodel-name" name="HtmlTestModel[name]" value="" maxlength="100">',
             ],
             [
                 '',
                 [
-                    'maxlength' => 99
+                    'maxlength' => 99,
                 ],
                 '<input type="password" id="htmltestmodel-name" name="HtmlTestModel[name]" value="" maxlength="99">',
             ],
@@ -1125,7 +1141,7 @@ EOD;
             [
                 'ok',
                 [],
-                '<div style="display:none"><p>Please fix the following errors:</p><ul></ul></div>'
+                '<div style="display:none"><p>Please fix the following errors:</p><ul></ul></div>',
             ],
             [
                 'ok',
@@ -1135,43 +1151,46 @@ EOD;
             [
                 str_repeat('long_string', 60),
                 [],
-                '<div><p>Please fix the following errors:</p><ul><li>Name should contain at most 100 characters.</li></ul></div>'
+                '<div><p>Please fix the following errors:</p><ul><li>Name should contain at most 100 characters.</li></ul></div>',
             ],
             [
                 'not_an_integer',
                 [],
                 '<div><p>Please fix the following errors:</p><ul><li>Error message. Here are some chars: &lt; &gt;</li></ul></div>',
-                function ($model) { /** @var $model DynamicModel */
+                function ($model) {
+                    /* @var $model DynamicModel */
                     $model->addError('name', 'Error message. Here are some chars: < >');
-                }
+                },
             ],
             [
                 'not_an_integer',
                 ['encode' => false],
                 '<div><p>Please fix the following errors:</p><ul><li>Error message. Here are some chars: < ></li></ul></div>',
-                function ($model) { /** @var $model DynamicModel */
+                function ($model) {
+                    /* @var $model DynamicModel */
                     $model->addError('name', 'Error message. Here are some chars: < >');
-                }
+                },
             ],
             [
                 str_repeat('long_string', 60),
                 [],
                 '<div><p>Please fix the following errors:</p><ul><li>Error message. Here are some chars: &lt; &gt;</li></ul></div>',
-                function ($model) { /** @var $model DynamicModel */
+                function ($model) {
+                    /* @var $model DynamicModel */
                     $model->addError('name', 'Error message. Here are some chars: < >');
-                }
+                },
             ],
             [
                 'not_an_integer',
                 ['showAllErrors' => true],
                 '<div><p>Please fix the following errors:</p><ul><li>Error message. Here are some chars: &lt; &gt;</li>
 <li>Error message. Here are even more chars: &quot;&quot;</li></ul></div>',
-                function ($model) { /** @var $model DynamicModel */
+                function ($model) {
+                    /* @var $model DynamicModel */
                     $model->addError('name', 'Error message. Here are some chars: < >');
                     $model->addError('name', 'Error message. Here are even more chars: ""');
-                }
+                },
             ],
-
         ];
     }
 
@@ -1195,8 +1214,32 @@ EOD;
         $this->assertEquals($expectedHtml, Html::errorSummary($model, $options));
     }
 
+    public function testError()
+    {
+        $model = new HtmlTestModel();
+        $model->validate();
+        $this->assertEquals(
+            '<div>Name cannot be blank.</div>',
+            Html::error($model, 'name'),
+            'Default error message after calling $model->getFirstError()'
+        );
+
+        $this->assertEquals(
+            '<div>this is custom error message</div>',
+            Html::error($model, 'name', ['errorSource' => [$model, 'customError']]),
+            'Custom error message generated by callback'
+        );
+        $this->assertEquals(
+            '<div>Error in yiiunit\framework\helpers\HtmlTestModel - name</div>',
+            Html::error($model, 'name', ['errorSource' => function ($model, $attribute) {
+                return 'Error in ' . get_class($model) . ' - ' . $attribute;
+            }]),
+            'Custom error message generated by closure'
+        );
+    }
+
     /**
-     * Data provider for [[testActiveTextArea()]]
+     * Data provider for [[testActiveTextArea()]].
      * @return array test data
      */
     public function dataProviderActiveTextArea()
@@ -1210,21 +1253,21 @@ EOD;
             [
                 'some text',
                 [
-                    'maxlength' => true
+                    'maxlength' => true,
                 ],
                 '<textarea id="htmltestmodel-description" name="HtmlTestModel[description]" maxlength="500">some text</textarea>',
             ],
             [
                 'some text',
                 [
-                    'maxlength' => 99
+                    'maxlength' => 99,
                 ],
                 '<textarea id="htmltestmodel-description" name="HtmlTestModel[description]" maxlength="99">some text</textarea>',
             ],
             [
                 'some text',
                 [
-                    'value' => 'override text'
+                    'value' => 'override text',
                 ],
                 '<textarea id="htmltestmodel-description" name="HtmlTestModel[description]">override text</textarea>',
             ],
@@ -1246,7 +1289,7 @@ EOD;
     }
 
     /**
-     * Fixes #10078
+     * @see https://github.com/yiisoft/yii2/issues/10078
      */
     public function testCsrfDisable()
     {
@@ -1263,9 +1306,9 @@ EOD;
         $noCsrfForm = Html::beginForm('/index.php', 'post', ['csrf' => false, 'id' => 'myform']);
         $this->assertEquals('<form id="myform" action="/index.php" method="post">', $noCsrfForm);
     }
-    
+
     /**
-     * Data provider for [[testActiveRadio()]]
+     * Data provider for [[testActiveRadio()]].
      * @return array test data
      */
     public function dataProviderActiveRadio()
@@ -1274,26 +1317,26 @@ EOD;
             [
                 true,
                 [],
-                '<input type="hidden" name="HtmlTestModel[radio]" value="0"><label><input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked> Radio</label>'
+                '<input type="hidden" name="HtmlTestModel[radio]" value="0"><label><input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked> Radio</label>',
             ],
             [
                 true,
                 ['uncheck' => false],
-                '<label><input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked> Radio</label>'
+                '<label><input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked> Radio</label>',
             ],
             [
                 true,
                 ['label' => false],
-                '<input type="hidden" name="HtmlTestModel[radio]" value="0"><input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked>'
+                '<input type="hidden" name="HtmlTestModel[radio]" value="0"><input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked>',
             ],
             [
                 true,
                 ['uncheck' => false, 'label' => false],
-                '<input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked>'
+                '<input type="radio" id="htmltestmodel-radio" name="HtmlTestModel[radio]" value="1" checked>',
             ],
         ];
     }
-    
+
     /**
      * @dataProvider dataProviderActiveRadio
      *
@@ -1307,9 +1350,9 @@ EOD;
         $model->radio = $value;
         $this->assertEquals($expectedHtml, Html::activeRadio($model, 'radio', $options));
     }
-        
+
     /**
-     * Data provider for [[testActiveCheckbox()]]
+     * Data provider for [[testActiveCheckbox()]].
      * @return array test data
      */
     public function dataProviderActiveCheckbox()
@@ -1318,26 +1361,26 @@ EOD;
             [
                 true,
                 [],
-                '<input type="hidden" name="HtmlTestModel[checkbox]" value="0"><label><input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked> Checkbox</label>'
+                '<input type="hidden" name="HtmlTestModel[checkbox]" value="0"><label><input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked> Checkbox</label>',
             ],
             [
                 true,
                 ['uncheck' => false],
-                '<label><input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked> Checkbox</label>'
+                '<label><input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked> Checkbox</label>',
             ],
             [
                 true,
                 ['label' => false],
-                '<input type="hidden" name="HtmlTestModel[checkbox]" value="0"><input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked>'
+                '<input type="hidden" name="HtmlTestModel[checkbox]" value="0"><input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked>',
             ],
             [
                 true,
                 ['uncheck' => false, 'label' => false],
-                '<input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked>'
+                '<input type="checkbox" id="htmltestmodel-checkbox" name="HtmlTestModel[checkbox]" value="1" checked>',
             ],
         ];
     }
-    
+
     /**
      * @dataProvider dataProviderActiveCheckbox
      *
@@ -1353,33 +1396,33 @@ EOD;
     }
 
     /**
-     * Data provider for [[testAttributeNameValidation()]]
+     * Data provider for [[testAttributeNameValidation()]].
      * @return array test data
      */
     public function validAttributeNamesProvider()
     {
         return [
-            ["asd]asdf.asdfa[asdfa", "asdf.asdfa"],
-            ["a", "a"],
-            ["[0]a", "a"],
-            ["a[0]", "a"],
-            ["[0]a[0]", "a"],
-            ["[0]a.[0]", "a."],
+            ['asd]asdf.asdfa[asdfa', 'asdf.asdfa'],
+            ['a', 'a'],
+            ['[0]a', 'a'],
+            ['a[0]', 'a'],
+            ['[0]a[0]', 'a'],
+            ['[0]a.[0]', 'a.'],
 
             // Unicode checks.
-            ["ä", "ä"],
-            ["ä", "ä"],
-            ["asdf]öáöio..[asdfasdf", "öáöio.."],
-            ["öáöio", "öáöio"],
-            ["[0]test.ööößß.d", "test.ööößß.d"],
-            ["ИІК", "ИІК"],
-            ["]ИІК[", "ИІК"],
-            ["[0]ИІК[0]", "ИІК"]
+            ['ä', 'ä'],
+            ['ä', 'ä'],
+            ['asdf]öáöio..[asdfasdf', 'öáöio..'],
+            ['öáöio', 'öáöio'],
+            ['[0]test.ööößß.d', 'test.ööößß.d'],
+            ['ИІК', 'ИІК'],
+            [']ИІК[', 'ИІК'],
+            ['[0]ИІК[0]', 'ИІК'],
         ];
     }
 
     /**
-     * Data provider for [[testAttributeNameValidation()]]
+     * Data provider for [[testAttributeNameValidation()]].
      * @return array test data
      */
     public function invalidAttributeNamesProvider()
@@ -1387,7 +1430,7 @@ EOD;
         return [
             ['. ..'],
             ['a +b'],
-            ['a,b']
+            ['a,b'],
         ];
     }
 
@@ -1406,7 +1449,7 @@ EOD;
             $this->assertEquals($expected, Html::getAttributeName($name));
         }
     }
-    
+
     /**
      * @dataProvider invalidAttributeNamesProvider
      *
@@ -1424,6 +1467,26 @@ EOD;
         $model = new HtmlTestModel();
         $actual = Html::activeFileInput($model, 'types', ['name' => 'foo']);
         $this->assertEqualsWithoutLE($expected, $actual);
+
+        $expected = '<input type="hidden" id="specific-id" name="foo" value=""><input type="file" id="htmltestmodel-types" name="foo">';
+        $model = new HtmlTestModel();
+        $actual = Html::activeFileInput($model, 'types', ['name' => 'foo', 'hiddenOptions'=>['id'=>'specific-id']]);
+        $this->assertEqualsWithoutLE($expected, $actual);
+
+        $expected = '<input type="hidden" id="specific-id" name="HtmlTestModel[types]" value=""><input type="file" id="htmltestmodel-types" name="HtmlTestModel[types]">';
+        $model = new HtmlTestModel();
+        $actual = Html::activeFileInput($model, 'types', ['hiddenOptions'=>['id'=>'specific-id']]);
+        $this->assertEqualsWithoutLE($expected, $actual);
+
+        $expected = '<input type="hidden" name="HtmlTestModel[types]" value=""><input type="file" id="htmltestmodel-types" name="HtmlTestModel[types]">';
+        $model = new HtmlTestModel();
+        $actual = Html::activeFileInput($model, 'types', ['hiddenOptions'=>[]]);
+        $this->assertEqualsWithoutLE($expected, $actual);
+
+        $expected = '<input type="hidden" name="foo" value=""><input type="file" id="htmltestmodel-types" name="foo">';
+        $model = new HtmlTestModel();
+        $actual = Html::activeFileInput($model, 'types', ['name' => 'foo', 'hiddenOptions'=>[]]);
+        $this->assertEqualsWithoutLE($expected, $actual);
     }
 
     /**
@@ -1439,19 +1502,19 @@ EOD;
     public function testGetAttributeValue()
     {
         $model = new HtmlTestModel();
-    
+
         $expected = null;
         $actual = Html::getAttributeValue($model, 'types');
         $this->assertSame($expected, $actual);
-    
-        $activeRecord = $this->getMock('yii\\db\\ActiveRecordInterface');
+
+        $activeRecord = $this->getMockBuilder('yii\\db\\ActiveRecordInterface')->getMock();
         $activeRecord->method('getPrimaryKey')->willReturn(1);
         $model->types = $activeRecord;
-    
+
         $expected = 1;
         $actual = Html::getAttributeValue($model, 'types');
         $this->assertSame($expected, $actual);
-    
+
         $model->types = [
             $activeRecord,
         ];
@@ -1477,14 +1540,14 @@ EOD;
      */
     public function testGetInputNameInvalidParamExceptionFormName()
     {
-        $model = $this->getMock('yii\\base\\Model');
+        $model = $this->getMockBuilder('yii\\base\\Model')->getMock();
         $model->method('formName')->willReturn('');
         Html::getInputName($model, '[foo]bar');
     }
 
     public function testGetInputName()
     {
-        $model = $this->getMock('yii\\base\\Model');
+        $model = $this->getMockBuilder('yii\\base\\Model')->getMock();
         $model->method('formName')->willReturn('');
         $expected = 'types';
         $actual = Html::getInputName($model, 'types');
@@ -1505,7 +1568,7 @@ EOD;
 
     public function testActiveDropDownList()
     {
-        $expected = <<<HTML
+        $expected = <<<'HTML'
 <input type="hidden" name="HtmlTestModel[types]" value=""><select id="htmltestmodel-types" name="HtmlTestModel[types][]" multiple="true" size="4">
 
 </select>
@@ -1519,7 +1582,7 @@ HTML;
     {
         $model = new HtmlTestModel();
 
-        $expected = <<<HTML
+        $expected = <<<'HTML'
 <input type="hidden" name="HtmlTestModel[types]" value=""><div id="htmltestmodel-types"><label><input type="radio" name="HtmlTestModel[types]" value="0"> foo</label></div>
 HTML;
         $actual = Html::activeRadioList($model, 'types', ['foo']);
@@ -1530,11 +1593,29 @@ HTML;
     {
         $model = new HtmlTestModel();
 
-        $expected = <<<HTML
+        $expected = <<<'HTML'
 <input type="hidden" name="HtmlTestModel[types]" value=""><div id="htmltestmodel-types"><label><input type="checkbox" name="HtmlTestModel[types][]" value="0"> foo</label></div>
 HTML;
         $actual = Html::activeCheckboxList($model, 'types', ['foo']);
         $this->assertEqualsWithoutLE($expected, $actual);
+    }
+
+    public function testActiveTextInput_placeholderFillFromModel()
+    {
+        $model = new HtmlTestModel();
+
+        $html = Html::activeTextInput($model, 'name', ['placeholder' => true]);
+
+        $this->assertContains('placeholder="Name"', $html);
+    }
+
+    public function testActiveTextInput_customPlaceholder()
+    {
+        $model = new HtmlTestModel();
+
+        $html = Html::activeTextInput($model, 'name', ['placeholder' => 'Custom placeholder']);
+
+        $this->assertContains('placeholder="Custom placeholder"', $html);
     }
 }
 
@@ -1560,5 +1641,10 @@ class HtmlTestModel extends DynamicModel
             ['description', 'string', 'max' => 500],
             [['radio', 'checkbox'], 'boolean'],
         ];
+    }
+
+    public function customError()
+    {
+        return 'this is custom error message';
     }
 }
